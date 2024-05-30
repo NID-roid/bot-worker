@@ -18,7 +18,7 @@ client.on('messageCreate', async (message) => {
       },
       body: JSON.stringify({
         content: message.content,
-        username: message.author.tag,
+        username: message.author.username,
         avatar_url: message.author.displayAvatarURL(),
         flags: 4100,
       }),
