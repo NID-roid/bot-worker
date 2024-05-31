@@ -9,7 +9,7 @@ export const sasudaiReaction = (message: Message) => {
 };
 
 const client = new Client({
-  intents: ['DirectMessages', 'Guilds', 'GuildMessages'],
+  intents: ['DirectMessages', 'Guilds', 'GuildMessages', 'MessageContent'],
   partials: [Partials.Channel],
 });
 
