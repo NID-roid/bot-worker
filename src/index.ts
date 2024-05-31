@@ -14,6 +14,10 @@ const client = new Client({
 });
 
 client.on('messageCreate', async (message) => {
+  if (message.content.includes('代表')) {
+    sasudaiReaction(message);
+  }
+
   if (message.content === '!sasudai') {
     message.reply('https://x.com/STECH_FES/status/1773995315420631265');
     sasudaiReaction(message);
