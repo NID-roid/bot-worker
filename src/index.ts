@@ -1,7 +1,12 @@
-import { ChannelType, Client, Partials } from 'discord.js';
+import { ChannelType, Client, type Message, Partials } from 'discord.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+export const sasudaiReaction = (message: Message) => {
+  message.react('1223834970863177769');
+  message.react('🔥');
+};
 
 const client = new Client({
   intents: ['DirectMessages', 'Guilds', 'GuildMessages'],
