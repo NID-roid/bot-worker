@@ -111,7 +111,9 @@ describe('handleMessageCreate', () => {
   });
 
   it('should use default empty string if DM_MESSAGE_CONTENT is not defined', async () => {
-    process.env.DM_MESSAGE_CONTENT = undefined;
+    // biome-ignore lint/performance/noDelete: Test undefined env vars to ensure the default value is used
+    delete process.env.DM_MESSAGE_CONTENT;
+
     const message = createMockMessage('Hello', false, ChannelType.DM);
     await handleMessageCreateCurried(message);
 
@@ -119,7 +121,9 @@ describe('handleMessageCreate', () => {
   });
 
   it('should use default empty string if MENTION_MESSAGE_CONTENT is not defined', async () => {
-    process.env.MENTION_MESSAGE_CONTENT = undefined;
+    // biome-ignore lint/performance/noDelete: Test undefined env vars to ensure the default value is used
+    delete process.env.MENTION_MESSAGE_CONTENT;
+
     const message = createMockMessage('', false, ChannelType.GuildText, {
       has: () => true,
     });
