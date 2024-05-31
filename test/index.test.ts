@@ -19,8 +19,13 @@ const expectReactionsToHaveBeenCalled = (mockReact: jest.Mock) => {
   expect(mockReact).toHaveBeenCalledWith('🔥');
 };
 
+const isSetEnv = (envVar: string) => {
+  return process.env[envVar] !== undefined;
+};
+
 describe('handleMessageCreate', () => {
   global.fetch = jest.fn();
+  const isSetAuditLogWebHook = isSetEnv('AUDIT_LOG_WEBHOOK');
   const mockReact = jest.fn();
   const mockReply = jest.fn();
   const mockDisplayAvatarURL = jest.fn();
@@ -50,7 +55,11 @@ describe('handleMessageCreate', () => {
     const message = createMockMessage('Hello', true, ChannelType.DM);
     await handleMessageCreateCurried(message);
 
-    expect(fetch).toHaveBeenCalled();
+    if (isSetAuditLogWebHook) {
+      expect(fetch).toHaveBeenCalled();
+    } else {
+      expect(fetch).not.toHaveBeenCalled();
+    }
 
     expect(mockReply).not.toHaveBeenCalled();
   });
@@ -59,7 +68,11 @@ describe('handleMessageCreate', () => {
     const message = createMockMessage('Hello 代表', true, ChannelType.DM);
     await handleMessageCreateCurried(message);
 
-    expect(fetch).toHaveBeenCalled();
+    if (isSetAuditLogWebHook) {
+      expect(fetch).toHaveBeenCalled();
+    } else {
+      expect(fetch).not.toHaveBeenCalled();
+    }
     expectReactionsToHaveBeenCalled(mockReact);
   });
 
@@ -79,7 +92,11 @@ describe('handleMessageCreate', () => {
     const message = createMockMessage('Hello', false, ChannelType.DM);
     await handleMessageCreateCurried(message);
 
-    expect(fetch).toHaveBeenCalled();
+    if (isSetAuditLogWebHook) {
+      expect(fetch).toHaveBeenCalled();
+    } else {
+      expect(fetch).not.toHaveBeenCalled();
+    }
     expect(mockReply).toHaveBeenCalledWith(
       process.env.DM_MESSAGE_CONTENT ?? '',
     );
