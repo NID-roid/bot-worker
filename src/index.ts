@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const client = new Client({
-  intents: ['DirectMessages'],
+  intents: ['DirectMessages', 'Guilds', 'GuildMessages'],
   partials: [Partials.Channel],
 });
 
@@ -29,6 +29,12 @@ client.on('messageCreate', async (message) => {
     }
 
     message.reply(process.env.DM_MESSAGE_CONTENT ?? '');
+  } else if (client.user && message.mentions.has(client.user.id)) {
+    if (message.author.bot) {
+      return;
+    }
+
+    message.reply(process.env.MENTION_MESSAGE_CONTENT ?? '');
   }
 });
 
