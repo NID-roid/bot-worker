@@ -22,19 +22,20 @@ client.on('messageCreate', async (message) => {
     message.reply('https://x.com/STECH_FES/status/1773995315420631265');
     sasudaiReaction(message);
   } else if (message.channel.type === ChannelType.DM) {
-    // biome-ignore lint:noNonNullAssertion - We know this is defined
-    await fetch(process.env.AUDIT_LOG_WEBHOOK!, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        content: message.content,
-        username: message.author.username,
-        avatar_url: message.author.displayAvatarURL(),
-        flags: 4100,
-      }),
-    });
+    if (process.env.AUDIT_LOG_WEBHOOK) {
+      await fetch(process.env.AUDIT_LOG_WEBHOOK, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: message.content,
+          username: message.author.username,
+          avatar_url: message.author.displayAvatarURL(),
+          flags: 4100,
+        }),
+      });
+    }
 
     if (message.author.bot) {
       return;
