@@ -1,7 +1,12 @@
-import { ChannelType, Client, Partials } from 'discord.js';
+import { ChannelType, Client, type Message, Partials } from 'discord.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+export const sasudaiReaction = (message: Message) => {
+  message.react('1223834970863177769');
+  message.react('🔥');
+};
 
 const client = new Client({
   intents: ['DirectMessages', 'Guilds', 'GuildMessages'],
@@ -9,7 +14,10 @@ const client = new Client({
 });
 
 client.on('messageCreate', async (message) => {
-  if (message.channel.type === ChannelType.DM) {
+  if (message.content === '!sasudai') {
+    message.reply('https://x.com/STECH_FES/status/1773995315420631265');
+    sasudaiReaction(message);
+  } else if (message.channel.type === ChannelType.DM) {
     // biome-ignore lint:noNonNullAssertion - We know this is defined
     await fetch(process.env.AUDIT_LOG_WEBHOOK!, {
       method: 'POST',
