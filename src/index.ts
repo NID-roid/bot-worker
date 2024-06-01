@@ -8,46 +8,50 @@ export const sasudaiReaction = (message: Message) => {
   message.react('🔥');
 };
 
+export const handleMessageCreate =
+  (client: Client) => async (message: Message) => {
+    if (message.content.includes('代表')) {
+      sasudaiReaction(message);
+    }
+
+    if (message.content === '!sasudai') {
+      message.reply('https://x.com/STECH_FES/status/1773995315420631265');
+      sasudaiReaction(message);
+    } else if (message.channel.type === ChannelType.DM) {
+      if (process.env.AUDIT_LOG_WEBHOOK) {
+        await fetch(process.env.AUDIT_LOG_WEBHOOK, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: message.content,
+            username: message.author.username,
+            avatar_url: message.author.displayAvatarURL(),
+            flags: 4100,
+          }),
+        });
+      }
+
+      if (message.author.bot) {
+        return;
+      }
+
+      message.reply(process.env.DM_MESSAGE_CONTENT ?? '');
+    } else if (client.user && message.mentions.has(client.user.id)) {
+      if (message.author.bot) {
+        return;
+      }
+
+      message.reply(process.env.MENTION_MESSAGE_CONTENT ?? '');
+    }
+  };
+
 const client = new Client({
   intents: ['DirectMessages', 'Guilds', 'GuildMessages', 'MessageContent'],
   partials: [Partials.Channel],
 });
 
-client.on('messageCreate', async (message) => {
-  if (message.content.includes('代表')) {
-    sasudaiReaction(message);
-  }
-
-  if (message.content === '!sasudai') {
-    message.reply('https://x.com/STECH_FES/status/1773995315420631265');
-    sasudaiReaction(message);
-  } else if (message.channel.type === ChannelType.DM) {
-    // biome-ignore lint:noNonNullAssertion - We know this is defined
-    await fetch(process.env.AUDIT_LOG_WEBHOOK!, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        content: message.content,
-        username: message.author.username,
-        avatar_url: message.author.displayAvatarURL(),
-        flags: 4100,
-      }),
-    });
-
-    if (message.author.bot) {
-      return;
-    }
-
-    message.reply(process.env.DM_MESSAGE_CONTENT ?? '');
-  } else if (client.user && message.mentions.has(client.user.id)) {
-    if (message.author.bot) {
-      return;
-    }
-
-    message.reply(process.env.MENTION_MESSAGE_CONTENT ?? '');
-  }
-});
+client.on('messageCreate', handleMessageCreate(client));
 
 client.login(process.env.DISCORD_BOT_TOKEN);

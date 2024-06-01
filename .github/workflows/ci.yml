@@ -7,6 +7,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
 
     steps:
       - name: Checkout
@@ -26,3 +28,16 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Test
+        run: pnpm test
+        env:
+          AUDIT_LOG_WEBHOOK: 'hoge'
+          DM_MESSAGE_CONTENT: 'fuga'
+          MENTION_MESSAGE_CONTENT: 'piyo'
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          use_oidc: true
+          fail_ci_if_error: true
