@@ -44,7 +44,7 @@ describe('handleMessageCreate', () => {
       channel: { type: channelType },
       react: mockReact,
       reply: mockReply,
-      mentions: mentions,
+      mentions: { users: mentions },
     }) as unknown as Message;
 
   beforeEach(() => {

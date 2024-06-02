@@ -38,7 +38,7 @@ export const handleMessageCreate =
       }
 
       message.reply(process.env.DM_MESSAGE_CONTENT ?? '');
-    } else if (client.user && message.mentions.has(client.user.id)) {
+    } else if (client.user && message.mentions.users.has(client.user.id)) {
       if (message.author.bot) {
         return;
       }
