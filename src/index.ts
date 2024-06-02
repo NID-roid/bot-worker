@@ -10,7 +10,7 @@ export const sasudaiReaction = (message: Message) => {
 
 export const handleMessageCreate =
   (client: Client) => async (message: Message) => {
-    if (message.content.includes('代表')) {
+    if (message.content.match(/代\s*[\s\S]{0,2}\s*表/)) {
       sasudaiReaction(message);
     }
 
