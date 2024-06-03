@@ -34,13 +34,13 @@ describe('handleMessageCreate', () => {
 
   const createMockMessage = ({
     content,
-    isBot,
     channelType,
+    isBot = false,
     isMentionedMe = false,
   }: {
     content: string;
-    isBot: boolean;
     channelType: ChannelType;
+    isBot?: boolean;
     isMentionedMe?: boolean;
   }) => {
     return {
@@ -60,8 +60,8 @@ describe('handleMessageCreate', () => {
   it('should not reply to messages from bots', async () => {
     const message = createMockMessage({
       content: 'Hello',
-      isBot: true,
       channelType: ChannelType.DM,
+      isBot: true,
     });
     await handleMessageCreateCurried(message);
 
@@ -77,7 +77,6 @@ describe('handleMessageCreate', () => {
   it('should react with specific emojis when content includes "代表"', async () => {
     const message = createMockMessage({
       content: 'Hello 代表',
-      isBot: false,
       channelType: ChannelType.DM,
     });
     await handleMessageCreateCurried(message);
@@ -93,7 +92,6 @@ describe('handleMessageCreate', () => {
   it('replies with a specific URL and reacts when the message content is "!sasudai"', async () => {
     const message = createMockMessage({
       content: '!sasudai',
-      isBot: false,
       channelType: ChannelType.DM,
     });
     await handleMessageCreateCurried(message);
@@ -110,7 +108,6 @@ describe('handleMessageCreate', () => {
   it('should reply to direct messages if not from a bot', async () => {
     const message = createMockMessage({
       content: 'Hello',
-      isBot: false,
       channelType: ChannelType.DM,
     });
     await handleMessageCreateCurried(message);
@@ -129,8 +126,8 @@ describe('handleMessageCreate', () => {
   it('should not reply if the message author is a bot', async () => {
     const message = createMockMessage({
       content: '',
-      isBot: true,
       channelType: ChannelType.GuildText,
+      isBot: true,
       isMentionedMe: true,
     });
 
@@ -143,7 +140,6 @@ describe('handleMessageCreate', () => {
   it('should reply to mentions if not from a bot', async () => {
     const message = createMockMessage({
       content: '',
-      isBot: false,
       channelType: ChannelType.GuildText,
       isMentionedMe: true,
     });
@@ -163,7 +159,6 @@ describe('handleMessageCreate', () => {
 
     const message = createMockMessage({
       content: 'Hello',
-      isBot: false,
       channelType: ChannelType.DM,
     });
     await handleMessageCreateCurried(message);
@@ -177,7 +172,6 @@ describe('handleMessageCreate', () => {
 
     const message = createMockMessage({
       content: '',
-      isBot: false,
       channelType: ChannelType.GuildText,
       isMentionedMe: true,
     });
