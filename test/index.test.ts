@@ -115,6 +115,19 @@ describe('handleMessageCreate', () => {
     expect(mockDelete).not.toHaveBeenCalled();
   });
 
+  it('should delete the message and react to the replied message if the command is used', async () => {
+    const message = createMockMessage({
+      content: '!daihyo',
+      channelType: ChannelType.GuildText,
+      hasReference: true,
+    });
+
+    await handleMessageCreateCurried(message);
+
+    expect(mockDelete).toHaveBeenCalled();
+    expectReactionsToHaveBeenCalled(mockReact);
+  });
+
   it('replies with a specific URL and reacts when the message content is "!sasudai"', async () => {
     const message = createMockMessage({
       content: '!sasudai',
