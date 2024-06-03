@@ -77,7 +77,7 @@ describe('handleMessageCreate', () => {
   it('should react with specific emojis when content includes "代表"', async () => {
     const message = createMockMessage({
       content: 'Hello 代表',
-      isBot: true,
+      isBot: false,
       channelType: ChannelType.DM,
     });
     await handleMessageCreateCurried(message);
@@ -93,7 +93,7 @@ describe('handleMessageCreate', () => {
   it('replies with a specific URL and reacts when the message content is "!sasudai"', async () => {
     const message = createMockMessage({
       content: '!sasudai',
-      isBot: true,
+      isBot: false,
       channelType: ChannelType.DM,
     });
     await handleMessageCreateCurried(message);
