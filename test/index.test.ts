@@ -29,6 +29,7 @@ describe('handleMessageCreate', () => {
   const mockReact = jest.fn();
   const mockReply = jest.fn();
   const mockDisplayAvatarURL = jest.fn();
+  const mockDelete = jest.fn();
   const client = { user: {} } as unknown as Client;
   const handleMessageCreateCurried = handleMessageCreate(client);
 
@@ -50,6 +51,7 @@ describe('handleMessageCreate', () => {
       react: mockReact,
       reply: mockReply,
       mentions: { users: { has: () => isMentionedMe } },
+      delete: mockDelete,
     } as unknown as Message;
   };
 
@@ -72,6 +74,7 @@ describe('handleMessageCreate', () => {
     }
 
     expect(mockReply).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should react with specific emojis when content includes "代表"', async () => {
@@ -87,6 +90,8 @@ describe('handleMessageCreate', () => {
       expect(fetch).not.toHaveBeenCalled();
     }
     expectReactionsToHaveBeenCalled(mockReact);
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('replies with a specific URL and reacts when the message content is "!sasudai"', async () => {
@@ -103,6 +108,7 @@ describe('handleMessageCreate', () => {
     expectReactionsToHaveBeenCalled(mockReact);
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should reply to direct messages if not from a bot', async () => {
@@ -121,6 +127,8 @@ describe('handleMessageCreate', () => {
     expect(mockReply).toHaveBeenCalledWith(
       process.env.DM_MESSAGE_CONTENT ?? '',
     );
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should not reply if the message author is a bot', async () => {
@@ -135,6 +143,7 @@ describe('handleMessageCreate', () => {
     expect(mockReply).not.toHaveBeenCalled();
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should reply to mentions if not from a bot', async () => {
@@ -151,6 +160,7 @@ describe('handleMessageCreate', () => {
     );
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should use default empty string if DM_MESSAGE_CONTENT is not defined', async () => {
@@ -164,6 +174,8 @@ describe('handleMessageCreate', () => {
     await handleMessageCreateCurried(message);
 
     expect(mockReply).toHaveBeenCalledWith('');
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should use default empty string if MENTION_MESSAGE_CONTENT is not defined', async () => {
@@ -179,5 +191,7 @@ describe('handleMessageCreate', () => {
     await handleMessageCreateCurried(message);
 
     expect(mockReply).toHaveBeenCalledWith('');
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 });
