@@ -85,6 +85,7 @@ describe('handleMessageCreate', () => {
     );
 
     expectReactionsToHaveBeenCalled(mockReact);
+
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -97,6 +98,7 @@ describe('handleMessageCreate', () => {
     } else {
       expect(fetch).not.toHaveBeenCalled();
     }
+
     expect(mockReply).toHaveBeenCalledWith(
       process.env.DM_MESSAGE_CONTENT ?? '',
     );
