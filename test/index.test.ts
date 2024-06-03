@@ -36,12 +36,12 @@ describe('handleMessageCreate', () => {
     content,
     isBot,
     channelType,
-    mentions,
+    isMentionedMe = false,
   }: {
     content: string;
     isBot: boolean;
     channelType: ChannelType;
-    mentions?: { has: () => boolean };
+    isMentionedMe?: boolean;
   }) => {
     return {
       content,
@@ -49,7 +49,7 @@ describe('handleMessageCreate', () => {
       channel: { type: channelType },
       react: mockReact,
       reply: mockReply,
-      mentions: { users: mentions },
+      mentions: { users: { has: () => isMentionedMe } },
     } as unknown as Message;
   };
 
@@ -131,7 +131,7 @@ describe('handleMessageCreate', () => {
       content: '',
       isBot: true,
       channelType: ChannelType.GuildText,
-      mentions: { has: () => true },
+      isMentionedMe: true,
     });
 
     await handleMessageCreateCurried(message);
@@ -145,7 +145,7 @@ describe('handleMessageCreate', () => {
       content: '',
       isBot: false,
       channelType: ChannelType.GuildText,
-      mentions: { has: () => true },
+      isMentionedMe: true,
     });
 
     await handleMessageCreateCurried(message);
@@ -179,7 +179,7 @@ describe('handleMessageCreate', () => {
       content: '',
       isBot: false,
       channelType: ChannelType.GuildText,
-      mentions: { has: () => true },
+      isMentionedMe: true,
     });
 
     await handleMessageCreateCurried(message);
