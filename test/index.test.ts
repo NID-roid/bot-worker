@@ -29,6 +29,7 @@ describe('handleMessageCreate', () => {
   const mockReact = jest.fn();
   const mockReply = jest.fn();
   const mockDisplayAvatarURL = jest.fn();
+  const mockDelete = jest.fn();
   const client = { user: {} } as unknown as Client;
   const handleMessageCreateCurried = handleMessageCreate(client);
 
@@ -37,12 +38,31 @@ describe('handleMessageCreate', () => {
     channelType,
     isBot = false,
     isMentionedMe = false,
+    hasReference = false,
   }: {
     content: string;
     channelType: ChannelType;
     isBot?: boolean;
     isMentionedMe?: boolean;
+    hasReference?: boolean;
   }) => {
+    const fetchReference = hasReference
+      ? jest.fn().mockResolvedValue(
+          createMockMessage({
+            content: '',
+            channelType: ChannelType.GuildText,
+          }),
+        )
+      : undefined;
+
+    const reference = hasReference
+      ? {
+          messageId: '1223834970863177769',
+          channelId: '1223834970863177769',
+          guildId: '1223834970863177769',
+        }
+      : undefined;
+
     return {
       content,
       author: { bot: isBot, displayAvatarURL: mockDisplayAvatarURL },
@@ -50,6 +70,9 @@ describe('handleMessageCreate', () => {
       react: mockReact,
       reply: mockReply,
       mentions: { users: { has: () => isMentionedMe } },
+      delete: mockDelete,
+      fetchReference: fetchReference,
+      reference: reference,
     } as unknown as Message;
   };
 
@@ -72,6 +95,7 @@ describe('handleMessageCreate', () => {
     }
 
     expect(mockReply).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should react with specific emojis when content includes "代表"', async () => {
@@ -86,6 +110,21 @@ describe('handleMessageCreate', () => {
     } else {
       expect(fetch).not.toHaveBeenCalled();
     }
+    expectReactionsToHaveBeenCalled(mockReact);
+
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it('should delete the message and react to the replied message if the command is used', async () => {
+    const message = createMockMessage({
+      content: '!daihyo',
+      channelType: ChannelType.GuildText,
+      hasReference: true,
+    });
+
+    await handleMessageCreateCurried(message);
+
+    expect(mockDelete).toHaveBeenCalled();
     expectReactionsToHaveBeenCalled(mockReact);
   });
 
@@ -103,6 +142,7 @@ describe('handleMessageCreate', () => {
     expectReactionsToHaveBeenCalled(mockReact);
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should reply to direct messages if not from a bot', async () => {
@@ -121,6 +161,8 @@ describe('handleMessageCreate', () => {
     expect(mockReply).toHaveBeenCalledWith(
       process.env.DM_MESSAGE_CONTENT ?? '',
     );
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should not reply if the message author is a bot', async () => {
@@ -135,6 +177,7 @@ describe('handleMessageCreate', () => {
     expect(mockReply).not.toHaveBeenCalled();
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should reply to mentions if not from a bot', async () => {
@@ -151,6 +194,7 @@ describe('handleMessageCreate', () => {
     );
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should use default empty string if DM_MESSAGE_CONTENT is not defined', async () => {
@@ -164,6 +208,8 @@ describe('handleMessageCreate', () => {
     await handleMessageCreateCurried(message);
 
     expect(mockReply).toHaveBeenCalledWith('');
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should use default empty string if MENTION_MESSAGE_CONTENT is not defined', async () => {
@@ -179,5 +225,7 @@ describe('handleMessageCreate', () => {
     await handleMessageCreateCurried(message);
 
     expect(mockReply).toHaveBeenCalledWith('');
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 });

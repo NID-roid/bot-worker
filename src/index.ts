@@ -14,6 +14,14 @@ export const handleMessageCreate =
       sasudaiReaction(message);
     }
 
+    if (message.reference?.messageId) {
+      const repliedMessage = await message.fetchReference();
+      if (message.content === '!daihyo') {
+        message.delete();
+        sasudaiReaction(repliedMessage);
+      }
+    }
+
     if (message.content === '!sasudai') {
       message.reply('https://x.com/STECH_FES/status/1773995315420631265');
       sasudaiReaction(message);
