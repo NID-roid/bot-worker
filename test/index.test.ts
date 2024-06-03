@@ -38,12 +38,31 @@ describe('handleMessageCreate', () => {
     channelType,
     isBot = false,
     isMentionedMe = false,
+    hasReference = false,
   }: {
     content: string;
     channelType: ChannelType;
     isBot?: boolean;
     isMentionedMe?: boolean;
+    hasReference?: boolean;
   }) => {
+    const fetchReference = hasReference
+      ? jest.fn().mockResolvedValue(
+          createMockMessage({
+            content: '',
+            channelType: ChannelType.GuildText,
+          }),
+        )
+      : undefined;
+
+    const reference = hasReference
+      ? {
+          messageId: '1223834970863177769',
+          channelId: '1223834970863177769',
+          guildId: '1223834970863177769',
+        }
+      : undefined;
+
     return {
       content,
       author: { bot: isBot, displayAvatarURL: mockDisplayAvatarURL },
@@ -52,6 +71,8 @@ describe('handleMessageCreate', () => {
       reply: mockReply,
       mentions: { users: { has: () => isMentionedMe } },
       delete: mockDelete,
+      fetchReference: fetchReference,
+      reference: reference,
     } as unknown as Message;
   };
 
