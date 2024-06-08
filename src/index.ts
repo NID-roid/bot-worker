@@ -10,8 +10,16 @@ export const sasudaiReaction = (message: Message) => {
 
 export const handleMessageCreate =
   (client: Client) => async (message: Message) => {
-    if (message.content.includes('代表')) {
+    if (message.content.match(/代\s*[\s\S]{0,2}\s*表/)) {
       sasudaiReaction(message);
+    }
+
+    if (message.reference?.messageId) {
+      const repliedMessage = await message.fetchReference();
+      if (message.content === '!daihyo') {
+        message.delete();
+        sasudaiReaction(repliedMessage);
+      }
     }
 
     if (message.content === '!sasudai') {
@@ -38,7 +46,7 @@ export const handleMessageCreate =
       }
 
       message.reply(process.env.DM_MESSAGE_CONTENT ?? '');
-    } else if (client.user && message.mentions.has(client.user.id)) {
+    } else if (client.user && message.mentions.users.has(client.user.id)) {
       if (message.author.bot) {
         return;
       }

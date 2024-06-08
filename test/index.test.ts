@@ -29,30 +29,63 @@ describe('handleMessageCreate', () => {
   const mockReact = jest.fn();
   const mockReply = jest.fn();
   const mockDisplayAvatarURL = jest.fn();
+  const mockDelete = jest.fn();
   const client = { user: {} } as unknown as Client;
   const handleMessageCreateCurried = handleMessageCreate(client);
 
-  const createMockMessage = (
-    content: string,
-    isBot: boolean,
-    channelType: ChannelType,
-    mentions?: { has: () => boolean },
-  ) =>
-    ({
+  const createMockMessage = ({
+    content,
+    channelType,
+    isBot = false,
+    isMentionedMe = false,
+    hasReference = false,
+  }: {
+    content: string;
+    channelType: ChannelType;
+    isBot?: boolean;
+    isMentionedMe?: boolean;
+    hasReference?: boolean;
+  }) => {
+    const fetchReference = hasReference
+      ? jest.fn().mockResolvedValue(
+          createMockMessage({
+            content: '',
+            channelType: ChannelType.GuildText,
+          }),
+        )
+      : undefined;
+
+    const reference = hasReference
+      ? {
+          messageId: '1223834970863177769',
+          channelId: '1223834970863177769',
+          guildId: '1223834970863177769',
+        }
+      : undefined;
+
+    return {
       content,
       author: { bot: isBot, displayAvatarURL: mockDisplayAvatarURL },
       channel: { type: channelType },
       react: mockReact,
       reply: mockReply,
-      mentions: mentions,
-    }) as unknown as Message;
+      mentions: { users: { has: () => isMentionedMe } },
+      delete: mockDelete,
+      fetchReference: fetchReference,
+      reference: reference,
+    } as unknown as Message;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('should not reply to messages from bots', async () => {
-    const message = createMockMessage('Hello', true, ChannelType.DM);
+    const message = createMockMessage({
+      content: 'Hello',
+      channelType: ChannelType.DM,
+      isBot: true,
+    });
     await handleMessageCreateCurried(message);
 
     if (isSetAuditLogWebHook) {
@@ -62,10 +95,14 @@ describe('handleMessageCreate', () => {
     }
 
     expect(mockReply).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should react with specific emojis when content includes "代表"', async () => {
-    const message = createMockMessage('Hello 代表', true, ChannelType.DM);
+    const message = createMockMessage({
+      content: 'Hello 代表',
+      channelType: ChannelType.DM,
+    });
     await handleMessageCreateCurried(message);
 
     if (isSetAuditLogWebHook) {
@@ -74,10 +111,28 @@ describe('handleMessageCreate', () => {
       expect(fetch).not.toHaveBeenCalled();
     }
     expectReactionsToHaveBeenCalled(mockReact);
+
+    expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it('should delete the message and react to the replied message if the command is used', async () => {
+    const message = createMockMessage({
+      content: '!daihyo',
+      channelType: ChannelType.GuildText,
+      hasReference: true,
+    });
+
+    await handleMessageCreateCurried(message);
+
+    expect(mockDelete).toHaveBeenCalled();
+    expectReactionsToHaveBeenCalled(mockReact);
   });
 
   it('replies with a specific URL and reacts when the message content is "!sasudai"', async () => {
-    const message = createMockMessage('!sasudai', true, ChannelType.DM);
+    const message = createMockMessage({
+      content: '!sasudai',
+      channelType: ChannelType.DM,
+    });
     await handleMessageCreateCurried(message);
 
     expect(mockReply).toHaveBeenCalledWith(
@@ -85,11 +140,16 @@ describe('handleMessageCreate', () => {
     );
 
     expectReactionsToHaveBeenCalled(mockReact);
+
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should reply to direct messages if not from a bot', async () => {
-    const message = createMockMessage('Hello', false, ChannelType.DM);
+    const message = createMockMessage({
+      content: 'Hello',
+      channelType: ChannelType.DM,
+    });
     await handleMessageCreateCurried(message);
 
     if (isSetAuditLogWebHook) {
@@ -97,25 +157,34 @@ describe('handleMessageCreate', () => {
     } else {
       expect(fetch).not.toHaveBeenCalled();
     }
+
     expect(mockReply).toHaveBeenCalledWith(
       process.env.DM_MESSAGE_CONTENT ?? '',
     );
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should not reply if the message author is a bot', async () => {
-    const message = createMockMessage('', true, ChannelType.GuildText, {
-      has: () => true,
+    const message = createMockMessage({
+      content: '',
+      channelType: ChannelType.GuildText,
+      isBot: true,
+      isMentionedMe: true,
     });
 
     await handleMessageCreateCurried(message);
     expect(mockReply).not.toHaveBeenCalled();
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should reply to mentions if not from a bot', async () => {
-    const message = createMockMessage('', false, ChannelType.GuildText, {
-      has: () => true,
+    const message = createMockMessage({
+      content: '',
+      channelType: ChannelType.GuildText,
+      isMentionedMe: true,
     });
 
     await handleMessageCreateCurried(message);
@@ -125,28 +194,38 @@ describe('handleMessageCreate', () => {
     );
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should use default empty string if DM_MESSAGE_CONTENT is not defined', async () => {
     // biome-ignore lint/performance/noDelete: Test undefined env vars to ensure the default value is used
     delete process.env.DM_MESSAGE_CONTENT;
 
-    const message = createMockMessage('Hello', false, ChannelType.DM);
+    const message = createMockMessage({
+      content: 'Hello',
+      channelType: ChannelType.DM,
+    });
     await handleMessageCreateCurried(message);
 
     expect(mockReply).toHaveBeenCalledWith('');
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
   it('should use default empty string if MENTION_MESSAGE_CONTENT is not defined', async () => {
     // biome-ignore lint/performance/noDelete: Test undefined env vars to ensure the default value is used
     delete process.env.MENTION_MESSAGE_CONTENT;
 
-    const message = createMockMessage('', false, ChannelType.GuildText, {
-      has: () => true,
+    const message = createMockMessage({
+      content: '',
+      channelType: ChannelType.GuildText,
+      isMentionedMe: true,
     });
 
     await handleMessageCreateCurried(message);
 
     expect(mockReply).toHaveBeenCalledWith('');
+
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 });
