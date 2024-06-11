@@ -1,30 +1,105 @@
+import { type QueryResultRow, sql } from '@vercel/postgres';
 import { ChannelType, Client, type Message, Partials } from 'discord.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const sasudaiReaction = (message: Message) => {
-  message.react('1223834970863177769');
-  message.react('🔥');
+const regexCache = new Map<string, RegExp>();
+
+const getOrCreateRegExp = (
+  command: string,
+  regexCache: Map<string, RegExp>,
+) => {
+  let regExp = regexCache.get(command);
+  if (!regExp) {
+    regExp = new RegExp(command);
+    regexCache.set(command, regExp);
+  }
+  return regExp;
+};
+
+export const messageReaction = ({
+  message,
+  queryResultRows,
+}: { message: Message; queryResultRows: QueryResultRow[] }) => {
+  for (const row of queryResultRows) {
+    message.react(row.value);
+  }
 };
 
 export const handleMessageCreate =
-  (client: Client) => async (message: Message) => {
-    if (message.content.match(/代\s*[\s\S]{0,2}\s*表/)) {
-      sasudaiReaction(message);
-    }
+  ({
+    client,
+    regexCache,
+  }: { client: Client; regexCache: Map<string, RegExp> }) =>
+  async (message: Message) => {
+    for (const row of (await sql`SELECT command FROM auto_reactions`).rows) {
+      const regExp = getOrCreateRegExp(row.command, regexCache);
+      if (message.content.match(regExp)) {
+        const emojis = await sql`
+          SELECT e.value
+          FROM emojis e
+          JOIN auto_reactions_emojis ae ON e.id = ae."emojiId"
+          WHERE ae."autoReactionId" = ${row.id}
+          ORDER BY ae.id ASC
+        `;
 
-    if (message.reference?.messageId) {
-      const repliedMessage = await message.fetchReference();
-      if (message.content === '!daihyo') {
-        message.delete();
-        sasudaiReaction(repliedMessage);
+        messageReaction({ message, queryResultRows: emojis.rows });
       }
     }
 
-    if (message.content === '!sasudai') {
-      message.reply('https://x.com/STECH_FES/status/1773995315420631265');
-      sasudaiReaction(message);
+    const reactionEmojis = await sql`
+      SELECT ar.command, e.value
+      FROM auto_reactions ar
+      JOIN auto_reactions_emojis are ON ar.id = are."autoReactionId"
+      JOIN emojis e ON e.id = are."emojiId"
+      ORDER BY are.id ASC;
+    `;
+
+    for (const row of reactionEmojis.rows) {
+      const regExp = getOrCreateRegExp(row.command, regexCache);
+      if (message.content.match(regExp)) {
+        messageReaction({ message, queryResultRows: [row] });
+      }
+    }
+
+    if (message.reference?.messageId) {
+      const reactionAgentEmojis = await sql`
+        SELECT e.value
+        FROM emojis e
+        JOIN reactions_agents_emojis rae ON e.id = rae."emojiId"
+        JOIN reactions_agents ra ON ra.id = rae."reactionAgentId"
+        WHERE ra.command = ${message.content}
+        ORDER BY rae.id ASC;
+      `;
+
+      if (reactionAgentEmojis.rows.length !== 0) {
+        const repliedMessage = await message.fetchReference();
+        message.delete();
+        messageReaction({
+          message: repliedMessage,
+          queryResultRows: reactionAgentEmojis.rows,
+        });
+      }
+    }
+
+    const commands = await sql`
+      SELECT id, response
+      FROM commands
+      WHERE command = ${message.content}
+    `;
+
+    if (commands.rows.length !== 0) {
+      message.reply(commands.rows[0].response);
+
+      const emojis = await sql`
+        SELECT e.value
+        FROM commands_emojis ce
+        JOIN emojis e ON e.id = ce."emojiId"
+        WHERE ce."commandId" = ${commands.rows[0].id}
+      `;
+
+      messageReaction({ message, queryResultRows: emojis.rows });
     } else if (message.channel.type === ChannelType.DM) {
       if (process.env.AUDIT_LOG_WEBHOOK) {
         await fetch(process.env.AUDIT_LOG_WEBHOOK, {
@@ -60,6 +135,6 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-client.on('messageCreate', handleMessageCreate(client));
+client.on('messageCreate', handleMessageCreate({ client, regexCache }));
 
 client.login(process.env.DISCORD_BOT_TOKEN);
