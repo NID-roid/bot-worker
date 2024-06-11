@@ -3,13 +3,19 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const regexCache = new Map<string, RegExp>();
+
 export const sasudaiReaction = (message: Message) => {
   message.react('1223834970863177769');
   message.react('🔥');
 };
 
 export const handleMessageCreate =
-  (client: Client) => async (message: Message) => {
+  ({
+    client,
+    regexCache,
+  }: { client: Client; regexCache: Map<string, RegExp> }) =>
+  async (message: Message) => {
     if (message.content.match(/代\s*[\s\S]{0,2}\s*表/)) {
       sasudaiReaction(message);
     }
@@ -60,6 +66,6 @@ const client = new Client({
   partials: [Partials.Channel],
 });
 
-client.on('messageCreate', handleMessageCreate(client));
+client.on('messageCreate', handleMessageCreate({ client, regexCache }));
 
 client.login(process.env.DISCORD_BOT_TOKEN);

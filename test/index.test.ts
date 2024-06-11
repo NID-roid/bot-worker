@@ -25,7 +25,11 @@ describe('handleMessageCreate', () => {
   const mockDisplayAvatarURL = jest.fn();
   const mockDelete = jest.fn();
   const client = { user: {} } as unknown as Client;
-  const handleMessageCreateCurried = handleMessageCreate(client);
+  const regexCache = new Map();
+  const handleMessageCreateCurried = handleMessageCreate({
+    client,
+    regexCache,
+  });
 
   const createMockMessage = ({
     content,
