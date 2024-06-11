@@ -32,7 +32,7 @@ jobs:
       - name: Test
         run: pnpm test
         env:
-          AUDIT_LOG_WEBHOOK: 'hoge'
+          AUDIT_LOG_WEBHOOK: ${{ secrets.AUDIT_LOG_WEBHOOK }}
           DM_MESSAGE_CONTENT: 'fuga'
           MENTION_MESSAGE_CONTENT: 'piyo'
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
