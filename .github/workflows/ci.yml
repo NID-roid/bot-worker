@@ -35,6 +35,7 @@ jobs:
           AUDIT_LOG_WEBHOOK: 'hoge'
           DM_MESSAGE_CONTENT: 'fuga'
           MENTION_MESSAGE_CONTENT: 'piyo'
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
