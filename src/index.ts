@@ -5,6 +5,18 @@ dotenv.config();
 
 const regexCache = new Map<string, RegExp>();
 
+const getOrCreateRegExp = (
+  command: string,
+  regexCache: Map<string, RegExp>,
+) => {
+  let regExp = regexCache.get(command);
+  if (!regExp) {
+    regExp = new RegExp(command);
+    regexCache.set(command, regExp);
+  }
+  return regExp;
+};
+
 export const sasudaiReaction = (message: Message) => {
   message.react('1223834970863177769');
   message.react('🔥');
