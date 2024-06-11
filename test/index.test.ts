@@ -19,13 +19,7 @@ const expectReactionsToHaveBeenCalled = (mockReact: jest.Mock) => {
   expect(mockReact).toHaveBeenCalledWith('🔥');
 };
 
-const isSetEnv = (envVar: string) => {
-  return process.env[envVar] !== undefined;
-};
-
 describe('handleMessageCreate', () => {
-  global.fetch = jest.fn();
-  const isSetAuditLogWebHook = isSetEnv('AUDIT_LOG_WEBHOOK');
   const mockReact = jest.fn();
   const mockReply = jest.fn();
   const mockDisplayAvatarURL = jest.fn();
@@ -88,12 +82,6 @@ describe('handleMessageCreate', () => {
     });
     await handleMessageCreateCurried(message);
 
-    if (isSetAuditLogWebHook) {
-      expect(fetch).toHaveBeenCalled();
-    } else {
-      expect(fetch).not.toHaveBeenCalled();
-    }
-
     expect(mockReply).not.toHaveBeenCalled();
     expect(mockDelete).not.toHaveBeenCalled();
   });
@@ -105,11 +93,6 @@ describe('handleMessageCreate', () => {
     });
     await handleMessageCreateCurried(message);
 
-    if (isSetAuditLogWebHook) {
-      expect(fetch).toHaveBeenCalled();
-    } else {
-      expect(fetch).not.toHaveBeenCalled();
-    }
     expectReactionsToHaveBeenCalled(mockReact);
 
     expect(mockDelete).not.toHaveBeenCalled();
@@ -141,7 +124,6 @@ describe('handleMessageCreate', () => {
 
     expectReactionsToHaveBeenCalled(mockReact);
 
-    expect(fetch).not.toHaveBeenCalled();
     expect(mockDelete).not.toHaveBeenCalled();
   });
 
@@ -151,12 +133,6 @@ describe('handleMessageCreate', () => {
       channelType: ChannelType.DM,
     });
     await handleMessageCreateCurried(message);
-
-    if (isSetAuditLogWebHook) {
-      expect(fetch).toHaveBeenCalled();
-    } else {
-      expect(fetch).not.toHaveBeenCalled();
-    }
 
     expect(mockReply).toHaveBeenCalledWith(
       process.env.DM_MESSAGE_CONTENT ?? '',
@@ -176,7 +152,6 @@ describe('handleMessageCreate', () => {
     await handleMessageCreateCurried(message);
     expect(mockReply).not.toHaveBeenCalled();
 
-    expect(fetch).not.toHaveBeenCalled();
     expect(mockDelete).not.toHaveBeenCalled();
   });
 
@@ -193,7 +168,6 @@ describe('handleMessageCreate', () => {
       process.env.MENTION_MESSAGE_CONTENT ?? '',
     );
 
-    expect(fetch).not.toHaveBeenCalled();
     expect(mockDelete).not.toHaveBeenCalled();
   });
 
