@@ -11,6 +11,7 @@
 
 - Node.js v20.x
 - corepack v0.20.0 or later
+- `corepack enable pnpm`
 
 ### Install dependencies
 
