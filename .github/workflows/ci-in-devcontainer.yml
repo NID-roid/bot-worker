@@ -1,0 +1,20 @@
+name: CI in DevContainer
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci-in-devcontainer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        uses: devcontainers/ci@v0.3
+        with:
+          cacheFrom: ghcr.io/nid-kt/bot-worker-devcontainer
+          push: never
+          runCmd: pnpm build
